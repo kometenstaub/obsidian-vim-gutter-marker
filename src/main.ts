@@ -134,6 +134,8 @@ export default class MarkGutter extends Plugin {
 
 			this.registerEvent(
 				app.workspace.on('file-open', async (file) => {
+					// reset marks for new pane; get them from history later, if available
+					this.marks = [];
 					if (this.contentEl) {
 						this.contentEl.removeEventListener('keydown', this.grabKey, {
 							capture: true,
@@ -147,6 +149,9 @@ export default class MarkGutter extends Plugin {
 					const leaves = Array.from(this.leaves)
 					const result = leaves.find((el) => {
 						if (el.id === currentId) {
+							if (el.marks) {
+								this.marks = el.marks
+							}
 							return true
 						}
 					})
@@ -275,6 +280,7 @@ export default class MarkGutter extends Plugin {
 									}
 								});
 
+								console.log('currEl', currentEl, this.marks, leaves)
 								currentEl['marks'] = this.marks;
 								leaves.push(currentEl)
 								this.leaves = new Set(leaves)
