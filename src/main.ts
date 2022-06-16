@@ -19,6 +19,7 @@ import {
 	GutterMarker,
 } from '@codemirror/view';
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
+import { Arr } from "tern";
 
 // add type safety for the undocumented methods
 declare module 'obsidian' {
@@ -119,7 +120,7 @@ export default class MarkGutter extends Plugin {
 	contentEl: HTMLElement;
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
-	leaves: { path: string; id: string; marks?: markData[] }[] = [];
+	leaves: Set<{ path: string; id: string; marks?: markData[] }> = new Set();
 
 	async onload() {
 		await this.loadSettings();
@@ -143,10 +144,18 @@ export default class MarkGutter extends Plugin {
 						return;
 					}
 					const currentId: string = app.workspace.getLeaf(false).id;
-					this.leaves.push({
-						path: file.path,
-						id: currentId,
-					});
+					const leaves = Array.from(this.leaves)
+					const result = leaves.find((el) => {
+						if (el.id === currentId) {
+							return true
+						}
+					})
+					if (!result) {
+						this.leaves.add({
+							path: file.path,
+							id: currentId,
+						});
+					}
 					console.log(this.leaves);
 					// check if there are still marks in the new leaf
 					// this can be the case when only the focus changed, but no other
@@ -161,7 +170,8 @@ export default class MarkGutter extends Plugin {
 							this.marks = [];
 							vimEvent.trigger('vim-setmarks', this.marks);
 						} else {
-							const oldEl = this.leaves.find((el) => {
+							const leaves = Array.from(this.leaves)
+							const oldEl =leaves.find((el) => {
 								if (el.id === currentLeaf.contentEl.id) {
 									return true;
 								}
@@ -258,34 +268,16 @@ export default class MarkGutter extends Plugin {
 									}
 								);
 								// for later comparison
-								const reversedLeaves: {
-									element: { path: string; id: string; marks?: markData[] };
-									index: number;
-								}[] = [];
-								for (let i = this.leaves.length - 1; i >= 0; i--) {
-									const el = this.leaves[i];
-									reversedLeaves.push({ element: el, index: i });
-								}
-								let ind;
-								let id;
-								console.log('this.leaves', this.leaves)
-								console.log('reversed', reversedLeaves)
-								const currentEl = reversedLeaves.find((el) => {
-									if (el.element.id === currentId) {
-										ind = el.index;
-										id = el.element.id
+								const leaves = Array.from(this.leaves)
+								const currentEl = leaves.find((el) => {
+									if (el.id === currentId) {
 										return true;
 									}
 								});
-								for (const el of reversedLeaves) {
-									if (el.index !== ind && el.element.id === id) {
-										this.leaves.splice(el.index, 1)
-										console.log(el.index)
-									}
-								}
-								console.log(this.marks);
-								this.leaves.at(ind).marks = this.marks;
-								console.log(this.leaves);
+
+								currentEl['marks'] = this.marks;
+								leaves.push(currentEl)
+								this.leaves = new Set(leaves)
 								vimEvent.trigger('vim-setmark', this.marks);
 								console.log('mark set');
 							}
