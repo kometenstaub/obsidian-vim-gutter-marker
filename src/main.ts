@@ -1,4 +1,6 @@
+import { is } from 'immutable';
 import {
+	App,
 	EventRef,
 	Events,
 	MarkdownView,
@@ -13,7 +15,10 @@ import {
 	DecorationSet,
 	EditorView,
 	ViewPlugin,
+	gutter,
+	GutterMarker,
 } from '@codemirror/view';
+import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
 
 // add type safety for the undocumented methods
 declare module 'obsidian' {
@@ -24,38 +29,50 @@ declare module 'obsidian' {
 }
 
 interface VimMarkSettings {
-	timeout: number;
+	showBeforeLineNumbers: boolean;
 }
 
-const DEFAULT_SETTINGS: VimMarkSettings = { timeout: 2000 };
+const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
-class YankEvent extends Events {
-	on(name: 'vim-yank', callback: (text: string) => void): EventRef;
+class VimEvent extends Events {
+	on(name: 'vim-setmark', callback: (mark: string) => void): EventRef;
+	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
 	}
 }
 
+class MarkMarker extends GutterMarker {
+	constructor(readonly view: EditorView, readonly marker: string) {
+		super();
+	}
+
+	toDOM(view: EditorView): Node {
+		const markEl = createFragment((frag) => {
+			frag.createDiv({ text: this.marker });
+		});
+		return markEl;
+	}
+
+	elementClass = 'vim-gutter-mark';
+}
+
 // cm6 view plugin
-function matchHighlighter(evt: YankEvent, timeout: number) {
-	return ViewPlugin.fromClass(
+function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
+	const markers = ViewPlugin.fromClass(
 		class {
-			decorations: DecorationSet;
+			markers: RangeSet<MarkMarker>;
 			// highlightTime: number;
 
-			constructor(view: EditorView) {
-				this.decorations = Decoration.none;
-				evt.on('vim-yank', (text) => {
+			constructor(public view: EditorView) {
+				this.markers = RangeSet.empty;
+				evt.on('vim-setmark', (mark) => {
 					const [cursorFrom, cursorTo] = this.getPositions();
-					this.decorations = this.makeYankDeco(
+					this.markers = this.makeGutterMarker(
 						view,
+						mark,
 						cursorFrom,
 						cursorTo
-					);
-					// timeout needs to be configured in settings
-					window.setTimeout(
-						() => (this.decorations = Decoration.none),
-						timeout
 					);
 				});
 			}
@@ -75,56 +92,134 @@ function matchHighlighter(evt: YankEvent, timeout: number) {
 				return [cursorFrom, cursorTo];
 			}
 
-			makeYankDeco(view: EditorView, posFrom: number, posTo: number) {
-				const deco = [];
-				const yankDeco = Decoration.mark({
-					class: 'yank-deco',
-					attributes: { 'data-contents': 'string' },
-				});
-				deco.push(yankDeco.range(posFrom, posTo));
-				return Decoration.set(deco);
+			makeGutterMarker(
+				view: EditorView,
+				mark: string,
+				posFrom: number,
+				posTo: number
+			) {
+				const builder = new RangeSetBuilder<MarkMarker>();
+				const dec = new MarkMarker(view, mark);
+				builder.add(posFrom, posTo, dec);
+				return builder.finish();
 			}
-		},
-		{ decorations: (v) => v.decorations }
+		}
 	);
+	const gutterPrec = showBeforeLineNumbers ? Prec.high : Prec.low;
+	return [
+		markers,
+		gutterPrec(
+			gutter({
+				class: 'cm-vim-mark',
+				markers(view) {
+					return view.plugin(markers)?.markers || RangeSet.empty;
+				},
+			})
+		),
+	];
 }
 
 export default class MarkGutter extends Plugin {
-	yankEventUninstaller: any;
-	uninstall = false;
-	yank: YankEvent;
 	settings: VimMarkSettings;
+	setMarks: string[] = [];
+	contentEl: HTMLElement;
+	grabKey(evt: KeyboardEvent): void;
 
+	// @ts-expect-error, ...
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new YankSettingTab(this.app, this));
 		if (this.app.vault.getConfig('vimMode')) {
-			const yank = new YankEvent();
-			this.yankEventUninstaller = around(
-				// @ts-expect-error, not typed
-				window.CodeMirrorAdapter?.Vim.getRegisterController(),
-				{
-					pushText(oldMethod: any) {
-						return function (...args: any[]) {
-							if (args.at(1) === 'yank')
-								yank.trigger('vim-yank', args.at(2));
-							const result =
-								oldMethod && oldMethod.apply(this, args);
-							return result;
-						};
-					},
-				}
-			);
+			const vimEvent = new VimEvent();
+
 			this.registerEditorExtension(
-				matchHighlighter(yank, this.settings.timeout)
+				vimGutterMarker(vimEvent, this.settings.showBeforeLineNumbers)
 			);
-			this.uninstall = true;
+
+			this.registerEvent(
+				app.workspace.on('file-open', (file) => {
+					if (this.contentEl) {
+						this.contentEl.removeEventListener(
+							'keydown',
+							this.grabKey,
+							{ capture: true }
+						);
+					}
+					this.contentEl =
+						app.workspace.getActiveViewOfType(
+							MarkdownView
+						).contentEl;
+					if (!this.contentEl) {
+						return;
+					}
+					let keyArray: string[] = [];
+					let mark = false;
+					this.grabKey = (event: KeyboardEvent) => {
+						//event.preventDefault();
+						//// handle Escape to reject the mode
+						//if (event.key === 'Escape') {
+						//	contentEl.removeEventListener("keydown", grabKey, { capture: true })
+						//}
+
+						/*
+					doesn't work
+					// @ts-expect-error, not typed
+					if (activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(app.workspace.getLeaf(false).view.editor.cm.cm).mode !== 'normal'
+					) {
+						return;
+					}
+*/
+
+						// test if keypress is capitalized
+						if (/^[a-z]$/i.test(event.key)) {
+							const isCapital = event.shiftKey;
+							if (
+								!isCapital &&
+								event.key !== 'm' &&
+								keyArray.length === 0
+							) {
+								return;
+							}
+							if (isCapital) {
+								// capture uppercase
+								keyArray.push(event.key.toUpperCase());
+							} else {
+								// capture lowercase
+								keyArray.push(event.key);
+							}
+						}
+
+						// stop when length of array is equal to 2
+						if (keyArray.length === 2) {
+							console.log(keyArray);
+							// @ts-expect-error, not typed
+							const mode =
+								activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(
+									app.workspace.getLeaf(false).view.editor.cm
+										.cm
+								).mode;
+							// the mode is not always set, even when it is active
+							if (mode === undefined || mode === 'normal') {
+								vimEvent.trigger('vim-setmark', keyArray.at(1));
+								console.log('mark set');
+							}
+							keyArray = [];
+							console.log('clear array');
+							console.log(keyArray);
+							// removing eventListener after proceeded
+							//contentEl.removeEventListener("keydown", grabKey, { capture: false })
+						}
+					};
+					this.contentEl.addEventListener('keydown', this.grabKey, {
+						capture: true,
+						passive: true,
+					});
+				})
+			);
 		}
 		console.log('Yank Highlight plugin loaded.');
 	}
 	async onunload() {
-		if (this.uninstall) this.yankEventUninstaller();
-
 		console.log('Yank Highlight plugin unloaded.');
 	}
 	async loadSettings() {
@@ -143,7 +238,7 @@ export default class MarkGutter extends Plugin {
 class YankSettingTab extends PluginSettingTab {
 	plugin: MarkGutter;
 
-	constructor(app: App, plugin: SKOSPlugin) {
+	constructor(app: App, plugin: MarkGutter) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -154,26 +249,19 @@ class YankSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		containerEl.createEl('h2', { text: 'Yank Highlighter settings' });
+		containerEl.createEl('h2', { text: 'Vim Gutter Marker settings' });
 
 		new Setting(containerEl)
-			.setName('Highlight timeout')
-			.setDesc('The timeout is in milliseconds.')
-			.addText((text) => {
-				text.setPlaceholder(
-					'Enter a number greater than 0. Default: 2000'
-				)
-					.setValue(settings.timeout.toString())
-					.onChange(async (value) => {
-						const num = Number.parseInt(value);
-						if (Number.isInteger(num) && num > 0) {
-							settings.timeout = num;
-							await this.plugin.saveSettings();
-						} else {
-							new Notice(
-								'Please enter an integer greater than 0.'
-							);
-						}
+			.setName('Show marker before line numbers')
+			.setDesc(
+				'If enabled, the markers will be shown before the line numbers.'
+			)
+			.addToggle((toggle) => {
+				toggle
+					.setValue(settings.showBeforeLineNumbers)
+					.onChange(async (state) => {
+						settings.showBeforeLineNumbers = state;
+						await this.plugin.saveSettings();
 					});
 			});
 	}
