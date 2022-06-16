@@ -20,5 +20,6 @@ The plugin can be installed manually or via BRAT. It is not in the community plu
 
 ## Credits
 
-The gutter implementation is based on [Obsidian lapel](https://github.com/liamcain/obsidian-lapel/blob/dce7a1d9fc8ac9a2c8d3589b0e4f92d1f0241f39/src/headingWidget.ts), which is MIT-licensed.
+The gutter implementation is based on [Obsidian lapel](https://github.com/liamcain/obsidian-lapel/blob/dce7a1d9fc8ac9a2c8d3589b0e4f92d1f0241f39/src/headingWidget.ts).
 
+The key capture is adapted from [this PR comment](https://github.com/mrjackphil/obsidian-jump-to-link/issues/35#issuecomment-1085905668).

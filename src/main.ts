@@ -190,6 +190,7 @@ export default class MarkGutter extends Plugin {
 					if (!this.contentEl) {
 						return;
 					}
+					// adapted from: https://github.com/mrjackphil/obsidian-jump-to-link/issues/35#issuecomment-1085905668
 					let keyArray: string[] = [];
 					this.grabKey = (event: KeyboardEvent) => {
 
