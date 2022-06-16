@@ -212,7 +212,7 @@ export default class MarkGutter extends Plugin {
 						if (keyArray.length === 2) {
 							const mode =
 								// @ts-expect-error, not typed
-								activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(
+								window.CodeMirrorAdapter.Vim.maybeInitVimState_(
 									app.workspace.getLeaf(false).view.editor.cm.cm
 								).mode;
 							// the mode is not always set, even when it is active
