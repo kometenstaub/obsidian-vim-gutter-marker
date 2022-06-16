@@ -1,3 +1,16 @@
-.yank-deco {
-	background-color: var(--text-highlight-bg);
+.vim-gutter-mark {
+	align-items: center;
+	color: var(--text-faint);
+	cursor: pointer;
+	display: inline-block;
+	font-size: 0.7rem;
+	letter-spacing: 0.25px;
+	min-width: 20px;
+	text-align: right;
 }
+
+/*
+.markdown-source-view.mod-cm6 .cm-gutters {
+	position: absolute;
+}
+*/

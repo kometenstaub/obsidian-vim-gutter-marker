@@ -42,7 +42,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (data: markData[]) => void): EventRef;
+	on(name: 'vim-setmark', callback: (data: [markData[], boolean]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -73,7 +73,8 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 			// highlightTime: number;
 
 			constructor(public view: EditorView) {
-				this.markers = this.makeGutterMarker(view, []);
+				//this.markers = this.makeGutterMarker(view, []);
+				this.markers = RangeSet.empty
 				evt.on('vim-setmark', (data) => {
 					console.log(data);
 					//this.oldData = data
