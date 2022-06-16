@@ -28,6 +28,12 @@ declare module 'obsidian' {
 	}
 }
 
+interface markData {
+	mark: string;
+	from: number;
+	to: number;
+}
+
 interface VimMarkSettings {
 	showBeforeLineNumbers: boolean;
 }
@@ -35,7 +41,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (mark: string) => void): EventRef;
+	on(name: 'vim-setmark', callback: (...data: markData[]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -65,17 +71,10 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 			// highlightTime: number;
 
 			constructor(public view: EditorView) {
-				//if (!this.markers) {
-				//	this.markers = RangeSet.empty
-				//}
-				evt.on('vim-setmark', (mark) => {
-					const [cursorFrom, cursorTo] = this.getPositions();
-					this.markers = this.makeGutterMarker(
-						view,
-						mark,
-						cursorFrom,
-						cursorTo
-					);
+				this.markers = RangeSet.empty;
+				evt.on('vim-setmark', (data) => {
+					console.log(data);
+					this.markers = this.makeGutterMarker(view, data);
 				});
 			}
 			// update unnecessary because highlight gets removed by timeout; otherwise it would never apply the classes
@@ -86,23 +85,12 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 			//
 			// }
 
-			getPositions() {
-				const { editor } =
-					app.workspace.getActiveViewOfType(MarkdownView);
-				const cursorFrom = editor.posToOffset(editor.getCursor('from'));
-				const cursorTo = editor.posToOffset(editor.getCursor('to'));
-				return [cursorFrom, cursorTo];
-			}
-
-			makeGutterMarker(
-				view: EditorView,
-				mark: string,
-				posFrom: number,
-				posTo: number
-			) {
+			makeGutterMarker(view: EditorView, data: markData[]) {
 				const builder = new RangeSetBuilder<MarkMarker>();
-				const dec = new MarkMarker(view, mark);
-				builder.add(posFrom, posTo, dec);
+				for (const el of data) {
+					const dec = new MarkMarker(view, el.mark);
+					builder.add(el.from, el.to, dec);
+				}
 				return builder.finish();
 			}
 		}
@@ -123,7 +111,7 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 
 export default class MarkGutter extends Plugin {
 	settings: VimMarkSettings;
-	setMarks: string[] = [];
+	marks: { mark: string; from: number; to: number }[] = [];
 	contentEl: HTMLElement;
 	grabKey(evt: KeyboardEvent): void;
 
@@ -141,16 +129,11 @@ export default class MarkGutter extends Plugin {
 			this.registerEvent(
 				app.workspace.on('file-open', (file) => {
 					if (this.contentEl) {
-						this.contentEl.removeEventListener(
-							'keydown',
-							this.grabKey,
-							{ capture: true }
-						);
+						this.contentEl.removeEventListener('keydown', this.grabKey, {
+							capture: true,
+						});
 					}
-					this.contentEl =
-						app.workspace.getActiveViewOfType(
-							MarkdownView
-						).contentEl;
+					this.contentEl = app.workspace.getActiveViewOfType(MarkdownView).contentEl;
 					if (!this.contentEl) {
 						return;
 					}
@@ -175,11 +158,7 @@ export default class MarkGutter extends Plugin {
 						// test if keypress is capitalized
 						if (/^[a-z]$/i.test(event.key)) {
 							const isCapital = event.shiftKey;
-							if (
-								!isCapital &&
-								event.key !== 'm' &&
-								keyArray.length === 0
-							) {
+							if (!isCapital && event.key !== 'm' && keyArray.length === 0) {
 								return;
 							}
 							if (isCapital) {
@@ -197,12 +176,42 @@ export default class MarkGutter extends Plugin {
 							const mode =
 								// @ts-expect-error, not typed
 								activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(
-									app.workspace.getLeaf(false).view.editor.cm
-										.cm
+									app.workspace.getLeaf(false).view.editor.cm.cm
 								).mode;
 							// the mode is not always set, even when it is active
 							if (mode === undefined || mode === 'normal') {
-								vimEvent.trigger('vim-setmark', keyArray.at(1));
+								const { editor } = app.workspace.getActiveViewOfType(MarkdownView);
+								const cursorFrom = editor.posToOffset(editor.getCursor('from'));
+								const cursorTo = editor.posToOffset(editor.getCursor('to'));
+
+								this.marks.push({
+									mark: keyArray.at(1),
+									from: cursorFrom,
+									to: cursorTo,
+								});
+								this.marks.sort(
+									(
+										a: {
+											mark: string;
+											from: number;
+											to: number;
+										},
+										b: {
+											mark: string;
+											from: number;
+											to: number;
+										}
+									) => {
+										if (a.from < b.from) {
+											return -1;
+										}
+										if (a.from > b.from) {
+											return 1;
+										}
+										return 0;
+									}
+								);
+								vimEvent.trigger('vim-setmark', this.marks);
 								console.log('mark set');
 							}
 							keyArray = [];
@@ -225,11 +234,7 @@ export default class MarkGutter extends Plugin {
 		console.log('Yank Highlight plugin unloaded.');
 	}
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
@@ -255,16 +260,12 @@ class YankSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Show marker before line numbers')
-			.setDesc(
-				'If enabled, the markers will be shown before the line numbers.'
-			)
+			.setDesc('If enabled, the markers will be shown before the line numbers.')
 			.addToggle((toggle) => {
-				toggle
-					.setValue(settings.showBeforeLineNumbers)
-					.onChange(async (state) => {
-						settings.showBeforeLineNumbers = state;
-						await this.plugin.saveSettings();
-					});
+				toggle.setValue(settings.showBeforeLineNumbers).onChange(async (state) => {
+					settings.showBeforeLineNumbers = state;
+					await this.plugin.saveSettings();
+				});
 			});
 	}
 }
