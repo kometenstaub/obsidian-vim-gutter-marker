@@ -49,6 +49,7 @@ class VimEvent extends Events {
 	}
 }
 
+// based on https://github.com/liamcain/obsidian-lapel/blob/dce7a1d9fc8ac9a2c8d3589b0e4f92d1f0241f39/src/headingWidget.ts (MIT-licensed)
 class MarkMarker extends GutterMarker {
 	constructor(readonly view: EditorView, readonly marker: string) {
 		super();
@@ -65,18 +66,14 @@ class MarkMarker extends GutterMarker {
 }
 
 // cm6 view plugin
+// based on https://github.com/liamcain/obsidian-lapel/blob/dce7a1d9fc8ac9a2c8d3589b0e4f92d1f0241f39/src/headingWidget.ts (MIT-licensed)
 function vimGutterMarker(app: App, evt: VimEvent, showBeforeLineNumbers: boolean) {
 	const markers = ViewPlugin.fromClass(
 		class {
 			markers: RangeSet<MarkMarker>;
-			//oldData: markData[] = []
-			// highlightTime: number;
 
 			constructor(public view: EditorView) {
-				//this.markers = this.makeGutterMarker(view, []);
-				//this.markers = RangeSet.empty
 				evt.on('vim-setmark', (data) => {
-					//this.oldData = data
 					this.markers = this.makeGutterMarker(view, data);
 				});
 			}
@@ -127,9 +124,9 @@ export default class MarkGutter extends Plugin {
 	first = 0;
 
 	async onload() {
-		console.log('Gutter Marker plugin loading.');
+		console.log('Vim Gutter Marker plugin loading.');
 		await this.loadSettings();
-		this.addSettingTab(new YankSettingTab(this.app, this));
+		this.addSettingTab(new VimGutterSettingTab(this.app, this));
 		if (this.app.vault.getConfig('vimMode')) {
 			const vimEvent = new VimEvent();
 
@@ -141,6 +138,7 @@ export default class MarkGutter extends Plugin {
 				app.workspace.on('file-open', async (file) => {
 					// reset marks for new pane; get them from history later, if available
 					this.marks = [];
+					// is this really necessary?
 					if (this.contentEl) {
 						this.contentEl.removeEventListener('keydown', this.grabKey, {
 							capture: true,
@@ -199,22 +197,7 @@ export default class MarkGutter extends Plugin {
 						return;
 					}
 					let keyArray: string[] = [];
-					let mark = false;
 					this.grabKey = (event: KeyboardEvent) => {
-						//event.preventDefault();
-						//// handle Escape to reject the mode
-						//if (event.key === 'Escape') {
-						//	contentEl.removeEventListener("keydown", grabKey, { capture: true })
-						//}
-
-						/*
-					doesn't work
-					// @ts-expect-error, not typed
-					if (activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(app.workspace.getLeaf(false).view.editor.cm.cm).mode !== 'normal'
-					) {
-						return;
-					}
-*/
 
 						// test if keypress is capitalized
 						if (/^[a-z]$/i.test(event.key)) {
@@ -302,7 +285,7 @@ export default class MarkGutter extends Plugin {
 		}
 	}
 	async onunload() {
-		console.log('Gutter Marker plugin unloaded.');
+		console.log('Vim Gutter Marker plugin unloaded.');
 	}
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -313,7 +296,7 @@ export default class MarkGutter extends Plugin {
 	}
 }
 
-class YankSettingTab extends PluginSettingTab {
+class VimGutterSettingTab extends PluginSettingTab {
 	plugin: MarkGutter;
 
 	constructor(app: App, plugin: MarkGutter) {
