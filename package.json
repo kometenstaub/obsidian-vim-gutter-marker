@@ -30,7 +30,7 @@
 				"section": "Bug Fixes"
 			}
 		],
-		"releaseCommitMessageFormat": "Vim Marg Gutter: {{currentTag}}"
+		"releaseCommitMessageFormat": "Vim Gutter Marker: {{currentTag}}"
 	},
 	"keywords": [],
 	"author": "",
