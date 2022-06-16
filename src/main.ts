@@ -151,6 +151,7 @@ export default class MarkGutter extends Plugin {
 						if (el.id === currentId) {
 							if (el.marks) {
 								this.marks = el.marks
+								vimEvent.trigger('vim-setmarks', this.marks)
 							}
 							return true
 						}
