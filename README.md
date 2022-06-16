@@ -1,4 +1,6 @@
-# Obsidian Vim Mark Gutter
+# Obsidian Vim Gutter Marker
+
+![Vim Gutter Marker screenshot](./media/vim-gutter-marker.png)
 
 ## Settings
 
