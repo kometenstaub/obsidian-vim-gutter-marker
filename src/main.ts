@@ -41,7 +41,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (...data: markData[]) => void): EventRef;
+	on(name: 'vim-setmark', callback: (data: markData[]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -71,7 +71,7 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 			// highlightTime: number;
 
 			constructor(public view: EditorView) {
-				this.markers = RangeSet.empty;
+				this.markers = this.makeGutterMarker(view, []);
 				evt.on('vim-setmark', (data) => {
 					console.log(data);
 					this.markers = this.makeGutterMarker(view, data);
@@ -87,6 +87,10 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 
 			makeGutterMarker(view: EditorView, data: markData[]) {
 				const builder = new RangeSetBuilder<MarkMarker>();
+				if (data.length === 0) {
+					this.markers = RangeSet.empty;
+					return builder.finish();
+				}
 				for (const el of data) {
 					const dec = new MarkMarker(view, el.mark);
 					builder.add(el.from, el.to, dec);
@@ -111,11 +115,11 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 
 export default class MarkGutter extends Plugin {
 	settings: VimMarkSettings;
-	marks: { mark: string; from: number; to: number }[] = [];
+	marks: { mark: string; from: number; to: number }[] | [] = [];
 	contentEl: HTMLElement;
-	grabKey(evt: KeyboardEvent): void;
+	grabKey: (evt: KeyboardEvent) => void;
+	oldLeaf: MarkdownView;
 
-	// @ts-expect-error, ...
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new YankSettingTab(this.app, this));
@@ -133,7 +137,14 @@ export default class MarkGutter extends Plugin {
 							capture: true,
 						});
 					}
-					this.contentEl = app.workspace.getActiveViewOfType(MarkdownView).contentEl;
+					const currentLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+					if (this.oldLeaf !== currentLeaf) {
+						this.marks = [];
+						vimEvent.trigger('vim-setmarks', this.marks);
+					}
+					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+
+					this.contentEl = currentLeaf.contentEl;
 					if (!this.contentEl) {
 						return;
 					}
