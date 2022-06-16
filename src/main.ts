@@ -115,6 +115,7 @@ export default class MarkGutter extends Plugin {
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
 	leaves: Set<{ path: string; id: string; marks?: markData[] }> = new Set();
+	oldContentEl: HTMLElement;
 
 	async onload() {
 		console.log('Vim Gutter Marker plugin loading.');
@@ -129,14 +130,13 @@ export default class MarkGutter extends Plugin {
 
 			this.registerEvent(
 				app.workspace.on('file-open', async (file) => {
-					// reset marks for new pane; get them from history later, if available
-					this.marks = [];
-					// is this really necessary?
-					if (this.contentEl) {
-						this.contentEl.removeEventListener('keydown', this.grabKey, {
+					if (this.oldContentEl) {
+						this.oldContentEl.removeEventListener('keydown', this.grabKey, {
 							capture: true,
 						});
 					}
+					// reset marks for new pane; get them from history later, if available
+					this.marks = [];
 					const currentLeaf = app.workspace.getActiveViewOfType(MarkdownView);
 					if (!currentLeaf) {
 						return;
@@ -195,6 +195,8 @@ export default class MarkGutter extends Plugin {
 					if (!this.contentEl) {
 						return;
 					}
+					// for removing the event listener on the next file-open event
+					this.oldContentEl = currentLeaf.contentEl
 					// adapted from: https://github.com/mrjackphil/obsidian-jump-to-link/issues/35#issuecomment-1085905668
 					let keyArray: string[] = [];
 					this.grabKey = (event: KeyboardEvent) => {
@@ -285,6 +287,11 @@ export default class MarkGutter extends Plugin {
 		}
 	}
 	async onunload() {
+		if (this.oldContentEl) {
+			this.oldContentEl.removeEventListener('keydown', this.grabKey, {
+				capture: true,
+			});
+		}
 		console.log('Vim Gutter Marker plugin unloaded.');
 	}
 	async loadSettings() {
