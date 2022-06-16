@@ -1,25 +1,19 @@
-import { is } from 'immutable';
 import {
-	App, editorLivePreviewField,
+	App,
 	EventRef,
 	Events,
 	MarkdownView,
-	Notice,
 	Plugin,
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
-import { around } from 'monkey-around';
 import {
-	Decoration,
-	DecorationSet,
 	EditorView,
 	ViewPlugin,
 	gutter,
-	GutterMarker, ViewUpdate,
+	GutterMarker,
 } from "@codemirror/view";
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
-import { Arr } from "tern";
 
 // add type safety for the undocumented methods
 declare module 'obsidian' {

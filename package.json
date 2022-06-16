@@ -1,7 +1,7 @@
 {
-	"name": "vim-mark-gutter",
+	"name": "vim-gutter-marker",
 	"version": "0.0.0",
-	"description": "Adds a Gutter Marker for vim markers.",
+	"description": "Adds a Gutter Marker for vim marks.",
 	"main": "src/main.ts",
 	"scripts": {
 		"dev": "cross-env BUILD=dev node esbuild.mjs",
@@ -37,8 +37,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@codemirror/view": "6.0.0",
-		"@codemirror/state": "6.0.0",
-		"monkey-around": "https://github.com/pjeby/monkey-around"
+		"@codemirror/state": "6.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^16.11.6",
