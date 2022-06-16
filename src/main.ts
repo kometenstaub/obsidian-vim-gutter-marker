@@ -115,10 +115,11 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 
 export default class MarkGutter extends Plugin {
 	settings: VimMarkSettings;
-	marks: { mark: string; from: number; to: number }[] | [] = [];
+	marks: markData[] | [] = [];
 	contentEl: HTMLElement;
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
+	leaves: {path: string, id: string, marks?: markData[]}[] = [];
 
 	async onload() {
 		await this.loadSettings();
@@ -131,17 +132,38 @@ export default class MarkGutter extends Plugin {
 			);
 
 			this.registerEvent(
-				app.workspace.on('file-open', (file) => {
+				app.workspace.on('file-open', async (file) => {
 					if (this.contentEl) {
 						this.contentEl.removeEventListener('keydown', this.grabKey, {
 							capture: true,
 						});
 					}
 					const currentLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+					this.leaves.push({
+						path: file.path,
+						id: currentLeaf.contentEl?.id,
+					})
 					if (this.oldLeaf !== currentLeaf) {
-						this.marks = [];
-						vimEvent.trigger('vim-setmarks', this.marks);
+							const myMarks = await currentLeaf.editor.cm.cm.marks
+							const markLength = Object.keys(myMarks).length
+							if (markLength === 0) {
+								this.marks = [];
+								vimEvent.trigger('vim-setmarks', this.marks);
+							} else {
+								const oldEl = this.leaves.find((el) => {
+									if (el.id === currentLeaf.contentEl.id) {
+										return true
+									}
+								})
+								if (oldEl && oldEl.marks) {
+									this.marks = oldEl.marks
+									vimEvent.trigger('vim-setmarks', this.marks);
+
+								}
+
+							}
 					}
+					console.log(this.marks)
 					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
 
 					this.contentEl = currentLeaf.contentEl;
@@ -222,6 +244,12 @@ export default class MarkGutter extends Plugin {
 										return 0;
 									}
 								);
+								const currentEl = this.leaves.find((el) => {
+									if (el.id === currentLeaf.contentEl.id) {
+										return true
+									}
+								})
+								currentEl.marks = this.marks
 								vimEvent.trigger('vim-setmark', this.marks);
 								console.log('mark set');
 							}
