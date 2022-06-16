@@ -65,7 +65,9 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 			// highlightTime: number;
 
 			constructor(public view: EditorView) {
-				this.markers = RangeSet.empty;
+				//if (!this.markers) {
+				//	this.markers = RangeSet.empty
+				//}
 				evt.on('vim-setmark', (mark) => {
 					const [cursorFrom, cursorTo] = this.getPositions();
 					this.markers = this.makeGutterMarker(
@@ -192,8 +194,8 @@ export default class MarkGutter extends Plugin {
 						// stop when length of array is equal to 2
 						if (keyArray.length === 2) {
 							console.log(keyArray);
-							// @ts-expect-error, not typed
 							const mode =
+								// @ts-expect-error, not typed
 								activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(
 									app.workspace.getLeaf(false).view.editor.cm
 										.cm
