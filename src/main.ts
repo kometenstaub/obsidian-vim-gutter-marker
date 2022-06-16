@@ -42,7 +42,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (data: markData[]) => void): EventRef;
+	on(name: 'vim-setmark', callback: (data: [markData[], boolean]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -127,6 +127,7 @@ export default class MarkGutter extends Plugin {
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
 	leaves: Set<{ path: string; id: string; marks?: markData[] }> = new Set();
+	first = 0;
 
 	async onload() {
 		await this.loadSettings();
