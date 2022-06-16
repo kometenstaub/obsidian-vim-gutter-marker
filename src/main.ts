@@ -42,7 +42,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (data: [markData[], boolean]) => void): EventRef;
+	on(name: 'vim-setmark', callback: (data: markData[]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -76,10 +76,8 @@ function vimGutterMarker(app: App, evt: VimEvent, showBeforeLineNumbers: boolean
 				//this.markers = this.makeGutterMarker(view, []);
 				//this.markers = RangeSet.empty
 				evt.on('vim-setmark', (data) => {
-					console.log(data);
 					//this.oldData = data
 					this.markers = this.makeGutterMarker(view, data);
-					console.log('trigger received', data)
 				});
 			}
 			//update unnecessary because highlight gets removed by timeout; otherwise it would never apply the classes
@@ -101,7 +99,6 @@ function vimGutterMarker(app: App, evt: VimEvent, showBeforeLineNumbers: boolean
 					const dec = new MarkMarker(view, el.mark);
 					builder.add(el.from, el.to, dec);
 				}
-				//console.log('builder', builder)
 				return builder.finish();
 			}
 		}
@@ -130,6 +127,7 @@ export default class MarkGutter extends Plugin {
 	first = 0;
 
 	async onload() {
+		console.log('Gutter Marker plugin loading.');
 		await this.loadSettings();
 		this.addSettingTab(new YankSettingTab(this.app, this));
 		if (this.app.vault.getConfig('vimMode')) {
@@ -156,9 +154,7 @@ export default class MarkGutter extends Plugin {
 					const leaves = Array.from(this.leaves)
 					const result = leaves.find((el) => {
 						if (el.id === currentId) {
-							console.log('I already exist', el)
 							if (el.marks) {
-								console.log('my mark exists', el.marks)
 								this.marks = el.marks
 								vimEvent.trigger('vim-setmark', this.marks)
 							}
@@ -171,7 +167,6 @@ export default class MarkGutter extends Plugin {
 							id: currentId,
 						});
 					}
-					console.log(this.leaves);
 					// check if there are still marks in the new leaf
 					// this can be the case when only the focus changed, but no other
 					// leaf was opened in the same pane
@@ -197,7 +192,6 @@ export default class MarkGutter extends Plugin {
 							}
 						}
 					}
-					console.log(this.marks);
 					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
 
 					this.contentEl = currentLeaf.contentEl;
@@ -239,7 +233,6 @@ export default class MarkGutter extends Plugin {
 
 						// stop when length of array is equal to 2
 						if (keyArray.length === 2) {
-							console.log(keyArray);
 							const mode =
 								// @ts-expect-error, not typed
 								activeWindow.CodeMirrorAdapter.Vim.maybeInitVimState_(
@@ -290,16 +283,12 @@ export default class MarkGutter extends Plugin {
 									}
 								});
 
-								console.log('currEl', currentEl, this.marks, leaves)
 								currentEl['marks'] = this.marks;
 								leaves.push(currentEl)
 								this.leaves = new Set(leaves)
 								vimEvent.trigger('vim-setmark', this.marks);
-								console.log('mark set');
 							}
 							keyArray = [];
-							console.log('clear array');
-							console.log(keyArray);
 							// removing eventListener after proceeded
 							//contentEl.removeEventListener("keydown", grabKey, { capture: false })
 						}
@@ -311,10 +300,9 @@ export default class MarkGutter extends Plugin {
 				})
 			);
 		}
-		console.log('Yank Highlight plugin loaded.');
 	}
 	async onunload() {
-		console.log('Yank Highlight plugin unloaded.');
+		console.log('Gutter Marker plugin unloaded.');
 	}
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -343,7 +331,7 @@ class YankSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Show marker before line numbers')
-			.setDesc('If enabled, the markers will be shown before the line numbers.')
+			.setDesc('If enabled, the markers will be shown before the line numbers. Requires a reload to take effect.')
 			.addToggle((toggle) => {
 				toggle.setValue(settings.showBeforeLineNumbers).onChange(async (state) => {
 					settings.showBeforeLineNumbers = state;
