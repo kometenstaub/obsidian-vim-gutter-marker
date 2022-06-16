@@ -119,7 +119,7 @@ export default class MarkGutter extends Plugin {
 	contentEl: HTMLElement;
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
-	leaves: {path: string, id: string, marks?: markData[]}[] = [];
+	leaves: { path: string; id: string; marks?: markData[] }[] = [];
 
 	async onload() {
 		await this.loadSettings();
@@ -139,31 +139,40 @@ export default class MarkGutter extends Plugin {
 						});
 					}
 					const currentLeaf = app.workspace.getActiveViewOfType(MarkdownView);
+					if (!currentLeaf) {
+						return;
+					}
+					const currentId: string = app.workspace.getLeaf(false).id;
 					this.leaves.push({
 						path: file.path,
-						id: currentLeaf.contentEl?.id,
-					})
+						id: currentId,
+					});
+					console.log(this.leaves);
+					// check if there are still marks in the new leaf
+					// this can be the case when only the focus changed, but no other
+					// leaf was opened in the same pane
 					if (this.oldLeaf !== currentLeaf) {
-							const myMarks = await currentLeaf.editor.cm.cm.marks
-							const markLength = Object.keys(myMarks).length
-							if (markLength === 0) {
-								this.marks = [];
-								vimEvent.trigger('vim-setmarks', this.marks);
-							} else {
-								const oldEl = this.leaves.find((el) => {
-									if (el.id === currentLeaf.contentEl.id) {
-										return true
-									}
-								})
-								if (oldEl && oldEl.marks) {
-									this.marks = oldEl.marks
-									vimEvent.trigger('vim-setmarks', this.marks);
-
+						//if (currentLeaf.getViewType() ===)
+						const myMarks = await currentLeaf.editor.cm.cm.marks;
+						const markLength = Object.keys(myMarks).length;
+						if (markLength === 0) {
+							// otherwise cm6 remembers them for the editor in which marks
+							// were set before
+							this.marks = [];
+							vimEvent.trigger('vim-setmarks', this.marks);
+						} else {
+							const oldEl = this.leaves.find((el) => {
+								if (el.id === currentLeaf.contentEl.id) {
+									return true;
 								}
-
+							});
+							if (oldEl && oldEl.marks) {
+								this.marks = oldEl.marks;
+								vimEvent.trigger('vim-setmarks', this.marks);
 							}
+						}
 					}
-					console.log(this.marks)
+					console.log(this.marks);
 					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
 
 					this.contentEl = currentLeaf.contentEl;
@@ -214,8 +223,12 @@ export default class MarkGutter extends Plugin {
 							// the mode is not always set, even when it is active
 							if (mode === undefined || mode === 'normal') {
 								const { editor } = app.workspace.getActiveViewOfType(MarkdownView);
-								const cursorFrom = editor.posToOffset(editor.getCursor('from'));
-								const cursorTo = editor.posToOffset(editor.getCursor('to'));
+								const intCursorFrom = editor.getCursor('from');
+								intCursorFrom.ch = 0;
+								const intCursorTo = editor.getCursor('to');
+								intCursorTo.ch = 0;
+								const cursorFrom = editor.posToOffset(intCursorFrom);
+								const cursorTo = editor.posToOffset(intCursorTo);
 
 								this.marks.push({
 									mark: keyArray.at(1),
@@ -244,12 +257,27 @@ export default class MarkGutter extends Plugin {
 										return 0;
 									}
 								);
-								const currentEl = this.leaves.find((el) => {
-									if (el.id === currentLeaf.contentEl.id) {
-										return true
+								// for later comparison
+								const reversedLeaves: {
+									element: { path: string; id: string; marks?: markData[] };
+									index: number;
+								}[] = [];
+								for (let i = this.leaves.length - 1; i >= 0; i--) {
+									const el = this.leaves[i];
+									reversedLeaves.push({ element: el, index: i });
+								}
+								let ind;
+								const currentEl = reversedLeaves.find((el) => {
+									if (el.element.id === currentId && el.element.marks) {
+										ind = el.index;
+										return true;
+									} else if (el.element.id === currentId) {
+										this.leaves.splice(el.index, 1);
 									}
-								})
-								currentEl.marks = this.marks
+								});
+								console.log(this.marks);
+								this.leaves.at(ind).marks = this.marks;
+								console.log(this.leaves);
 								vimEvent.trigger('vim-setmark', this.marks);
 								console.log('mark set');
 							}

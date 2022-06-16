@@ -1,9 +1,9 @@
 {
 	"id": "vim-mark-gutter",
-	"name": "Vim Mark Gutter",
+	"name": "Vim Gutter Marker",
 	"version": "0.0.0",
 	"minAppVersion": "0.14.15",
-	"description": "Yank Highlighter for the Vim mode.",
+	"description": "Adds a Gutter Marker for vim markers.",
 	"author": "kometenstaub",
 	"isDesktopOnly": false
 }

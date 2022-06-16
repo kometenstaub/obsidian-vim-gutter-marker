@@ -1,7 +1,7 @@
 {
 	"name": "vim-mark-gutter",
 	"version": "0.0.0",
-	"description": "Yank Highlighter for the Vim mode.",
+	"description": "Adds a Gutter Marker for vim markers.",
 	"main": "src/main.ts",
 	"scripts": {
 		"dev": "cross-env BUILD=dev node esbuild.mjs",
