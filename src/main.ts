@@ -23,11 +23,11 @@ declare module 'obsidian' {
 	}
 }
 
-interface YankSettings {
+interface VimMarkSettings {
 	timeout: number;
 }
 
-const DEFAULT_SETTINGS: YankSettings = { timeout: 2000 };
+const DEFAULT_SETTINGS: VimMarkSettings = { timeout: 2000 };
 
 class YankEvent extends Events {
 	on(name: 'vim-yank', callback: (text: string) => void): EventRef;
@@ -89,11 +89,11 @@ function matchHighlighter(evt: YankEvent, timeout: number) {
 	);
 }
 
-export default class YankHighlighter extends Plugin {
+export default class MarkGutter extends Plugin {
 	yankEventUninstaller: any;
 	uninstall = false;
 	yank: YankEvent;
-	settings: YankSettings;
+	settings: VimMarkSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -141,7 +141,7 @@ export default class YankHighlighter extends Plugin {
 }
 
 class YankSettingTab extends PluginSettingTab {
-	plugin: YankHighlighter;
+	plugin: MarkGutter;
 
 	constructor(app: App, plugin: SKOSPlugin) {
 		super(app, plugin);

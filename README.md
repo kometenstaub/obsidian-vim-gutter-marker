@@ -1,4 +1,4 @@
-# Obsidian Vim Yank Highlighter
+# Obsidian Vim Mark Gutter
 
 ## Known limitations
 

@@ -1,6 +1,6 @@
 {
 	"id": "vim-mark-gutter",
-	"name": "Vim Yank Highlighter",
+	"name": "Vim Mark Gutter",
 	"version": "0.0.0",
 	"minAppVersion": "0.14.15",
 	"description": "Yank Highlighter for the Vim mode.",

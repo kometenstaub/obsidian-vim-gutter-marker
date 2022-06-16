@@ -30,13 +30,13 @@
 				"section": "Bug Fixes"
 			}
 		],
-		"releaseCommitMessageFormat": "Vim Yank Highlight: {{currentTag}}"
+		"releaseCommitMessageFormat": "Vim Marg Gutter: {{currentTag}}"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"@codemirror/view": "^0.19.48",
+		"@codemirror/view": "0.20.7",
 		"monkey-around": "https://github.com/pjeby/monkey-around"
 	},
 	"devDependencies": {
