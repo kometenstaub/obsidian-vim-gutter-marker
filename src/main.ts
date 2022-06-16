@@ -1,6 +1,6 @@
 import { is } from 'immutable';
 import {
-	App,
+	App, editorLivePreviewField,
 	EventRef,
 	Events,
 	MarkdownView,
@@ -8,7 +8,7 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
-} from 'obsidian';
+} from "obsidian";
 import { around } from 'monkey-around';
 import {
 	Decoration,
@@ -16,8 +16,8 @@ import {
 	EditorView,
 	ViewPlugin,
 	gutter,
-	GutterMarker,
-} from '@codemirror/view';
+	GutterMarker, ViewUpdate,
+} from "@codemirror/view";
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
 import { Arr } from "tern";
 
@@ -69,22 +69,26 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 	const markers = ViewPlugin.fromClass(
 		class {
 			markers: RangeSet<MarkMarker>;
+			//oldData: markData[] = []
 			// highlightTime: number;
 
 			constructor(public view: EditorView) {
 				this.markers = this.makeGutterMarker(view, []);
 				evt.on('vim-setmark', (data) => {
 					console.log(data);
+					//this.oldData = data
 					this.markers = this.makeGutterMarker(view, data);
+					console.log('trigger received', data)
 				});
 			}
-			// update unnecessary because highlight gets removed by timeout; otherwise it would never apply the classes
-			// update(update: ViewUpdate) {
-			//	if (update.selectionSet || update.docChanged || update.viewportChanged) {
-			//		this.decorations = Decoration.none;
-			//		// this.makeYankDeco(update.view);
-			//
-			// }
+			//update unnecessary because highlight gets removed by timeout; otherwise it would never apply the classes
+			//update(update: ViewUpdate) {
+			//	if (!update.state.field(editorLivePreviewField)) {
+			//		this.markers = RangeSet.empty;
+			//		return;
+			//	}
+			//	this.markers = this.makeGutterMarker(this.view, this.oldData);
+			//}
 
 			makeGutterMarker(view: EditorView, data: markData[]) {
 				const builder = new RangeSetBuilder<MarkMarker>();
@@ -96,6 +100,7 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 					const dec = new MarkMarker(view, el.mark);
 					builder.add(el.from, el.to, dec);
 				}
+				console.log('builder', builder)
 				return builder.finish();
 			}
 		}
@@ -149,9 +154,11 @@ export default class MarkGutter extends Plugin {
 					const leaves = Array.from(this.leaves)
 					const result = leaves.find((el) => {
 						if (el.id === currentId) {
+							console.log('I already exist', el)
 							if (el.marks) {
+								console.log('my mark exists', el.marks)
 								this.marks = el.marks
-								vimEvent.trigger('vim-setmarks', this.marks)
+								vimEvent.trigger('vim-setmark', this.marks)
 							}
 							return true
 						}
@@ -174,7 +181,7 @@ export default class MarkGutter extends Plugin {
 							// otherwise cm6 remembers them for the editor in which marks
 							// were set before
 							this.marks = [];
-							vimEvent.trigger('vim-setmarks', this.marks);
+							vimEvent.trigger('vim-setmark', this.marks);
 						} else {
 							const leaves = Array.from(this.leaves)
 							const oldEl =leaves.find((el) => {
@@ -184,7 +191,7 @@ export default class MarkGutter extends Plugin {
 							});
 							if (oldEl && oldEl.marks) {
 								this.marks = oldEl.marks;
-								vimEvent.trigger('vim-setmarks', this.marks);
+								vimEvent.trigger('vim-setmark', this.marks);
 							}
 						}
 					}
