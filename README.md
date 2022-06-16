@@ -10,7 +10,7 @@ If line numbers are activated, the markers can be shown either before or after t
 
 ## Known limitations
 
-When switching to a new file in the same pane and switching back, sometimes the markers only go away when clicking into another pane and back again.
+When switching to an "empty file" in the same pane and switching back, the gutter markers don't get reset.
 
 If marks get deleted, this is not reflected in the gutter. The same thing applies to reusing the same mark character.
 
