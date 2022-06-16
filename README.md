@@ -1,5 +1,7 @@
 # Obsidian Vim Gutter Marker
 
+This plugin adds gutter markers for *vim marks*.
+
 ![Vim Gutter Marker screenshot](./media/vim-gutter-marker.png)
 
 ## Settings
