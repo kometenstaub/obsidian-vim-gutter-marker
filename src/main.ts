@@ -42,7 +42,7 @@ interface VimMarkSettings {
 const DEFAULT_SETTINGS: VimMarkSettings = { showBeforeLineNumbers: true };
 
 class VimEvent extends Events {
-	on(name: 'vim-setmark', callback: (data: [markData[], boolean]) => void): EventRef;
+	on(name: 'vim-setmark', callback: (data: markData[]) => void): EventRef;
 	//on(name: 'vim-delmark', callback: (text: string) => void): EventRef;
 	on(name: string, callback: (...data: any) => any, ctx?: any): EventRef {
 		return super.on(name, callback, ctx);
@@ -65,7 +65,7 @@ class MarkMarker extends GutterMarker {
 }
 
 // cm6 view plugin
-function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
+function vimGutterMarker(app: App, evt: VimEvent, showBeforeLineNumbers: boolean) {
 	const markers = ViewPlugin.fromClass(
 		class {
 			markers: RangeSet<MarkMarker>;
@@ -74,7 +74,7 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 
 			constructor(public view: EditorView) {
 				//this.markers = this.makeGutterMarker(view, []);
-				this.markers = RangeSet.empty
+				//this.markers = RangeSet.empty
 				evt.on('vim-setmark', (data) => {
 					console.log(data);
 					//this.oldData = data
@@ -101,7 +101,7 @@ function vimGutterMarker(evt: VimEvent, showBeforeLineNumbers: boolean) {
 					const dec = new MarkMarker(view, el.mark);
 					builder.add(el.from, el.to, dec);
 				}
-				console.log('builder', builder)
+				//console.log('builder', builder)
 				return builder.finish();
 			}
 		}
@@ -135,7 +135,7 @@ export default class MarkGutter extends Plugin {
 			const vimEvent = new VimEvent();
 
 			this.registerEditorExtension(
-				vimGutterMarker(vimEvent, this.settings.showBeforeLineNumbers)
+				vimGutterMarker(app, vimEvent, this.settings.showBeforeLineNumbers)
 			);
 
 			this.registerEvent(
