@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.1...0.0.2) (2022-06-16)
+
+
+### Bug Fixes
+
+* clean up old event listeners ([0e154a8](https://github.com/kometenstaub/obsidian-vim-gutter-marker/commit/0e154a8083297681867d1dd9c6010c04297f1f2f))
+* marks diappear after opening other file in ([d2e8917](https://github.com/kometenstaub/obsidian-vim-gutter-marker/commit/d2e8917114201af6e7be8cf935e7d570a3f4c613))
+
 ### 0.0.1 (2022-06-16)
 
 
