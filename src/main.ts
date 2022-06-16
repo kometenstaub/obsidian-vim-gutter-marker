@@ -115,7 +115,6 @@ export default class MarkGutter extends Plugin {
 	grabKey: (evt: KeyboardEvent) => void;
 	oldLeaf: MarkdownView;
 	leaves: Set<{ path: string; id: string; marks?: markData[] }> = new Set();
-	first = 0;
 
 	async onload() {
 		console.log('Vim Gutter Marker plugin loading.');
@@ -144,6 +143,8 @@ export default class MarkGutter extends Plugin {
 					}
 					const currentId: string = app.workspace.getLeaf(false).id;
 					const leaves = Array.from(this.leaves)
+					// focus changed between panes, but file in pane didn't change, so old marks are still there
+					// add old marks back
 					const result = leaves.find((el) => {
 						if (el.id === currentId) {
 							if (el.marks) {
@@ -153,16 +154,17 @@ export default class MarkGutter extends Plugin {
 							return true
 						}
 					})
+					// new leaf, old ones don't get added
 					if (!result) {
 						this.leaves.add({
 							path: file.path,
 							id: currentId,
 						});
 					}
-					// check if there are still marks in the new leaf
-					// this can be the case when only the focus changed, but no other
-					// leaf was opened in the same pane
-					if (this.oldLeaf !== currentLeaf) {
+					// check if there are still marks in the same leaf
+					// this can be the case when only the file changed, but no other
+					// leaf was opened
+					if (this.oldLeaf === currentLeaf) {
 						//if (currentLeaf.getViewType() ===)
 						const myMarks = await currentLeaf.editor.cm.cm.marks;
 						const markLength = Object.keys(myMarks).length;
@@ -183,6 +185,9 @@ export default class MarkGutter extends Plugin {
 								vimEvent.trigger('vim-setmark', this.marks);
 							}
 						}
+					}
+					if (this.oldLeaf === currentLeaf) {
+
 					}
 					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
 
