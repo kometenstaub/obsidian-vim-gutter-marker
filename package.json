@@ -1,6 +1,6 @@
 {
-	"name": "yank-highlight",
-	"version": "1.0.0",
+	"name": "vim-mark-gutter",
+	"version": "0.0.0",
 	"description": "Yank Highlighter for the Vim mode.",
 	"main": "src/main.ts",
 	"scripts": {
@@ -8,7 +8,7 @@
 		"build": "cross-env BUILD=production node esbuild.mjs",
 		"release": "standard-version",
 		"lint": "npx eslint src/",
-		"format": "npx prettier --write src/",
+		"format": "npx prettier --write src/ esbuild.mjs",
 		"css": "npx sass --watch src/styles.scss build/styles.css"
 	},
 	"standard-version": {

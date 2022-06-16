@@ -108,7 +108,6 @@ export default class YankHighlighter extends Plugin {
 						return function (...args: any[]) {
 							if (args.at(1) === 'yank')
 								yank.trigger('vim-yank', args.at(2));
-
 							const result =
 								oldMethod && oldMethod.apply(this, args);
 							return result;

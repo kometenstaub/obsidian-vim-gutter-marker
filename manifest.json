@@ -1,7 +1,7 @@
 {
-	"id": "yank-highlight",
+	"id": "vim-mark-gutter",
 	"name": "Vim Yank Highlighter",
-	"version": "1.0.0",
+	"version": "0.0.0",
 	"minAppVersion": "0.14.15",
 	"description": "Yank Highlighter for the Vim mode.",
 	"author": "kometenstaub",
