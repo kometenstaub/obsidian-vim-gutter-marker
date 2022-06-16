@@ -267,14 +267,22 @@ export default class MarkGutter extends Plugin {
 									reversedLeaves.push({ element: el, index: i });
 								}
 								let ind;
+								let id;
+								console.log('this.leaves', this.leaves)
+								console.log('reversed', reversedLeaves)
 								const currentEl = reversedLeaves.find((el) => {
-									if (el.element.id === currentId && el.element.marks) {
+									if (el.element.id === currentId) {
 										ind = el.index;
+										id = el.element.id
 										return true;
-									} else if (el.element.id === currentId) {
-										this.leaves.splice(el.index, 1);
 									}
 								});
+								for (const el of reversedLeaves) {
+									if (el.index !== ind && el.element.id === id) {
+										this.leaves.splice(el.index, 1)
+										console.log(el.index)
+									}
+								}
 								console.log(this.marks);
 								this.leaves.at(ind).marks = this.marks;
 								console.log(this.leaves);
