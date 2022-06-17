@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.4...0.0.5) (2022-06-17)
+
+
+### Bug Fixes
+
+* abort in reading mode ([ddb05c3](https://github.com/kometenstaub/obsidian-vim-gutter-marker/commit/ddb05c392681c1e4aeb8ca112ef597b5b4689bd4))
+
 ### [0.0.4](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.3...0.0.4) (2022-06-17)
 
 
