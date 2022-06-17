@@ -143,23 +143,25 @@ export default class MarkGutter extends Plugin {
 					}
 					const currentId: string = app.workspace.getLeaf(false).id;
 					const leaves = Array.from(this.leaves)
-					// focus changed between panes, but file in pane didn't change, so old marks are still there
-					// add old marks back
-					const result = leaves.find((el) => {
-						if (el.id === currentId) {
-							if (el.marks) {
-								this.marks = el.marks
-								vimEvent.trigger('vim-setmark', this.marks)
+					// focus changed between panes, but file in pane didn't change, so old marks are still there,
+					// but not in the gutter anymore - add old marks back
+					if (this.oldLeaf !== currentLeaf) {
+						const result = leaves.find((el) => {
+							if (el.id === currentId) {
+								if (el.marks) {
+									this.marks = el.marks
+									vimEvent.trigger('vim-setmark', this.marks)
+								}
+								return true
 							}
-							return true
+						})
+						// new leaf, old ones don't get added
+						if (!result) {
+							this.leaves.add({
+								path: file.path,
+								id: currentId,
+							});
 						}
-					})
-					// new leaf, old ones don't get added
-					if (!result) {
-						this.leaves.add({
-							path: file.path,
-							id: currentId,
-						});
 					}
 					// check if there are still marks in the same leaf
 					// this can be the case when only the file changed, but no other
