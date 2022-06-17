@@ -175,17 +175,6 @@ export default class MarkGutter extends Plugin {
 							// were set before
 							this.marks = [];
 							vimEvent.trigger('vim-setmark', this.marks);
-						} else {
-							const leaves = Array.from(this.leaves)
-							const oldEl =leaves.find((el) => {
-								if (el.id === currentLeaf.contentEl.id) {
-									return true;
-								}
-							});
-							if (oldEl && oldEl.marks) {
-								this.marks = oldEl.marks;
-								vimEvent.trigger('vim-setmark', this.marks);
-							}
 						}
 					}
 					this.oldLeaf = app.workspace.getActiveViewOfType(MarkdownView);
