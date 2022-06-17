@@ -14,6 +14,8 @@ When switching to an "empty file" in the same pane and switching back, the gutte
 
 If marks get deleted, this is not reflected in the gutter. The same thing applies to reusing the same mark character.
 
+When opening a new file 
+
 ## Installation
 
 The plugin can be installed manually or via BRAT. It is not in the community plugins.

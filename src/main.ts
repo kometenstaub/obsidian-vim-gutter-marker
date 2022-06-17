@@ -191,7 +191,10 @@ export default class MarkGutter extends Plugin {
 							if (!isCapital && event.key !== 'm' && keyArray.length === 0) {
 								return;
 							}
-							if (isCapital) {
+							if (isCapital && keyArray.length === 0) {
+								return;
+							}
+							if (isCapital && keyArray.length === 1) {
 								// capture uppercase
 								keyArray.push(event.key.toUpperCase());
 							} else {
