@@ -175,6 +175,10 @@ export default class MarkGutter extends Plugin {
 					// adapted from: https://github.com/mrjackphil/obsidian-jump-to-link/issues/35#issuecomment-1085905668
 					let keyArray: string[] = [];
 					this.grabKey = (event: KeyboardEvent) => {
+						if (currentLeaf.getMode() === 'preview') {
+							return;
+						}
+
 						// empty array if Esc
 						if (event.key === 'Escape') {
 							keyArray = [];
