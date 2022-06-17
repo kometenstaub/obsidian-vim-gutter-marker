@@ -1,18 +1,5 @@
-import {
-	App,
-	EventRef,
-	Events,
-	MarkdownView,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-} from "obsidian";
-import {
-	EditorView,
-	ViewPlugin,
-	gutter,
-	GutterMarker,
-} from "@codemirror/view";
+import { App, EventRef, Events, MarkdownView, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { EditorView, ViewPlugin, gutter, GutterMarker } from '@codemirror/view';
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
 
 // add type safety for the undocumented methods
@@ -142,19 +129,19 @@ export default class MarkGutter extends Plugin {
 						return;
 					}
 					const currentId: string = app.workspace.getLeaf(false).id;
-					const leaves = Array.from(this.leaves)
+					const leaves = Array.from(this.leaves);
 					// focus changed between panes, but file in pane didn't change, so old marks are still there,
 					// but not in the gutter anymore - add old marks back
 					if (this.oldLeaf !== currentLeaf) {
 						const result = leaves.find((el) => {
 							if (el.id === currentId) {
 								if (el.marks) {
-									this.marks = el.marks
-									vimEvent.trigger('vim-setmark', this.marks)
+									this.marks = el.marks;
+									vimEvent.trigger('vim-setmark', this.marks);
 								}
-								return true
+								return true;
 							}
-						})
+						});
 						// new leaf, old ones don't get added
 						if (!result) {
 							this.leaves.add({
@@ -184,15 +171,14 @@ export default class MarkGutter extends Plugin {
 						return;
 					}
 					// for removing the event listener on the next file-open event
-					this.oldContentEl = currentLeaf.contentEl
+					this.oldContentEl = currentLeaf.contentEl;
 					// adapted from: https://github.com/mrjackphil/obsidian-jump-to-link/issues/35#issuecomment-1085905668
 					let keyArray: string[] = [];
 					this.grabKey = (event: KeyboardEvent) => {
-
 						// empty array if Esc
 						if (event.key === 'Escape') {
-							keyArray = []
-							return
+							keyArray = [];
+							return;
 						}
 
 						// test if keypress is capitalized
@@ -255,7 +241,7 @@ export default class MarkGutter extends Plugin {
 									}
 								);
 								// for later comparison
-								const leaves = Array.from(this.leaves)
+								const leaves = Array.from(this.leaves);
 								const currentEl = leaves.find((el) => {
 									if (el.id === currentId) {
 										return true;
@@ -263,8 +249,8 @@ export default class MarkGutter extends Plugin {
 								});
 
 								currentEl['marks'] = this.marks;
-								leaves.push(currentEl)
-								this.leaves = new Set(leaves)
+								leaves.push(currentEl);
+								this.leaves = new Set(leaves);
 								vimEvent.trigger('vim-setmark', this.marks);
 							}
 							keyArray = [];
@@ -315,7 +301,9 @@ class VimGutterSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Show marker before line numbers')
-			.setDesc('If enabled, the markers will be shown before the line numbers. Requires a reload to take effect.')
+			.setDesc(
+				'If enabled, the markers will be shown before the line numbers. Requires a reload to take effect.'
+			)
 			.addToggle((toggle) => {
 				toggle.setValue(settings.showBeforeLineNumbers).onChange(async (state) => {
 					settings.showBeforeLineNumbers = state;
