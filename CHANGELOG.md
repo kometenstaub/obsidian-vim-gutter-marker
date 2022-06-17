@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.3...0.0.4) (2022-06-17)
+
+
+### Bug Fixes
+
+* Esc after m possible ([851e22d](https://github.com/kometenstaub/obsidian-vim-gutter-marker/commit/851e22dbc482669e35b285f19c20c00f55f15b25))
+
 ### [0.0.3](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.2...0.0.3) (2022-06-16)
 
 ### [0.0.2](https://github.com/kometenstaub/obsidian-vim-gutter-marker/compare/0.0.1...0.0.2) (2022-06-16)
