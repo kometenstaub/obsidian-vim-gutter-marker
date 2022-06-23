@@ -1,4 +1,4 @@
-import { App, EventRef, Events, MarkdownView, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, EventRef, Events, MarkdownView, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from "obsidian";
 import { EditorView, ViewPlugin, gutter, GutterMarker } from '@codemirror/view';
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
 
@@ -129,6 +129,7 @@ export default class MarkGutter extends Plugin {
 						return;
 					}
 					const currentId: string = app.workspace.getLeaf(false).id;
+					if (!currentId) return;
 					const leaves = Array.from(this.leaves);
 					// focus changed between panes, but file in pane didn't change, so old marks are still there,
 					// but not in the gutter anymore - add old marks back
@@ -208,7 +209,8 @@ export default class MarkGutter extends Plugin {
 							const mode =
 								// @ts-expect-error, not typed
 								window.CodeMirrorAdapter.Vim.maybeInitVimState_(
-									app.workspace.getLeaf(false).view.editor.cm.cm
+									// @ts-expect-error, not typed
+									app.workspace.getActiveViewOfType(MarkdownView).editor.cm.cm
 								).mode;
 							// the mode is not always set, even when it is active
 							if (mode === undefined || mode === 'normal') {
