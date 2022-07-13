@@ -1,6 +1,6 @@
 {
 	"name": "vim-gutter-marker",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"description": "Adds a Gutter Marker for vim marks.",
 	"main": "src/main.ts",
 	"scripts": {
