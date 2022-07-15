@@ -1,7 +1,7 @@
 {
 	"id": "vim-gutter-marker",
 	"name": "Vim Gutter Marker",
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"minAppVersion": "0.15.1",
 	"description": "Adds a Gutter Marker for vim marks.",
 	"author": "kometenstaub",
