@@ -1,4 +1,14 @@
-import { App, EventRef, Events, MarkdownView, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from "obsidian";
+import {
+	App,
+	EventRef,
+	Events,
+	MarkdownView,
+	Plugin,
+	PluginSettingTab,
+	Setting,
+	View,
+	WorkspaceLeaf,
+} from 'obsidian';
 import { EditorView, ViewPlugin, gutter, GutterMarker } from '@codemirror/view';
 import { Prec, RangeSet, RangeSetBuilder } from '@codemirror/state';
 
@@ -128,7 +138,8 @@ export default class MarkGutter extends Plugin {
 					if (!currentLeaf) {
 						return;
 					}
-					const currentId: string = app.workspace.getLeaf(false).id;
+					//@ts-expect-error,...
+					const currentId: string = app.workspace.getActiveViewOfType(View).leaf.id;
 					if (!currentId) return;
 					const leaves = Array.from(this.leaves);
 					// focus changed between panes, but file in pane didn't change, so old marks are still there,
@@ -311,7 +322,7 @@ class VimGutterSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Show marker before line numbers')
 			.setDesc(
-				'If enabled, the markers will be shown before the line numbers. Requires a reload to take effect.'
+				'If enabled, the markers are to the left of the line numbers. If disabled, they are to the right. Requires a reload to take effect.'
 			)
 			.addToggle((toggle) => {
 				toggle.setValue(settings.showBeforeLineNumbers).onChange(async (state) => {
